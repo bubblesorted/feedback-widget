@@ -49,6 +49,19 @@ function freshDraft(): CaptureDraft {
   };
 }
 
+export function transparent(color: string): boolean {
+  return !color || color === "transparent" || /^rgba\([^)]*,\s*0\)$/.test(color.replace(/\s+/g, " ").trim());
+}
+
+/** The first opaque background behind the page: body, then html, then white. */
+function pageBackground(): string {
+  for (const el of [document.body, document.documentElement]) {
+    const bg = getComputedStyle(el).backgroundColor;
+    if (!transparent(bg)) return bg;
+  }
+  return "#ffffff";
+}
+
 function message(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "Something went wrong. Your draft is still here.";
 }
@@ -187,12 +200,20 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
     setBusy("Capturing the element");
     setError("");
     const where = here();
+    // Transitions and animations are off for the length of the capture, so the image shows the element at rest.
+    const still = document.createElement("style");
+    still.setAttribute("data-feedback-capture", "still");
+    still.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}";
     try {
-      const { toBlob } = await import("html-to-image");
-      const image = await toBlob(element as HTMLElement, {
-        pixelRatio: Math.min(devicePixelRatio || 1, 2),
-        backgroundColor: getComputedStyle(document.body).backgroundColor || "#ffffff",
+      const { domToBlob } = await import("modern-screenshot");
+      document.head.appendChild(still);
+      const image = await domToBlob(element, {
+        scale: Math.min(devicePixelRatio || 1, 2),
+        // The backgroundColor option is painted onto the captured element itself, over its own background (a green
+        // button came out white). Only an element with no background of its own gets the page's.
+        backgroundColor: transparent(getComputedStyle(element).backgroundColor) ? pageBackground() : null,
         filter: (node) => !(node instanceof Element && node.matches(CAPTURE_UI)),
+        type: "image/png",
       });
       if (!image?.size) throw new Error("The image could not be captured. Try recording the element instead.");
       if (image.size > MAX_ASSET_BYTES) throw new Error("This image is over 12 MB. Pick a smaller element.");
@@ -200,6 +221,7 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
     } catch (cause) {
       setError(message(cause));
     } finally {
+      still.remove();
       setBusy("");
     }
   }

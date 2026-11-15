@@ -28,13 +28,13 @@
     "./styles.css": "./dist/styles.css"
   },
   "scripts": {
-    "build": "tsup && cp src/styles.css dist/styles.css",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup && cp src/styles.css dist/styles.css",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
-    "html-to-image": "1.11.13"
+    "modern-screenshot": "4.7.0"
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",

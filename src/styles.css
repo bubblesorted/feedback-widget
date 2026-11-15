@@ -398,6 +398,12 @@
   }
 }
 
+@media (hover: none) {
+  .fbw-hint {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .fbw-panel {
     right: 8px;
