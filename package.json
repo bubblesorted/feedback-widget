@@ -31,7 +31,7 @@
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup && cp src/styles.css dist/styles.css",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+    "release": "sh scripts/release.sh"
   },
   "dependencies": {
     "modern-screenshot": "4.7.0"
@@ -55,7 +55,9 @@
   "engines": {
     "node": ">=20"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bubblesorted/feedback-widget.git"
+  },
+  "private": true
 }

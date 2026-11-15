@@ -15,9 +15,13 @@ One widget, used by every site. A site supplies configuration only: who may send
 
 ## Use it on a site
 
+Each version is a GitHub release, so a site needs no registry account:
+
 ```sh
-npm install @bubblesorted/feedback-widget
+npm install https://github.com/bubblesorted/feedback-widget/releases/download/v0.1.0/bubblesorted-feedback-widget-0.1.0.tgz
 ```
+
+To update a site, install the newer release's URL. The lockfile pins the file's checksum.
 
 ### 1. The route
 
@@ -103,4 +107,4 @@ npm run typecheck
 npm run build
 ```
 
-Release: bump `version`, add a CHANGELOG entry, `npm publish`. Sites update through their dependency bump PRs.
+Release: bump `version`, add a CHANGELOG entry, commit, then `npm run release`. It checks, builds and packs the widget, tags `v<version>` and attaches the file to a GitHub release. Each site then installs the new release URL.
