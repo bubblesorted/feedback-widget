@@ -1,0 +1,13 @@
+{
+  "$comment": "Every site that uses the widget. `npm run update-sites` opens one PR per site that moves it to this package's current release. dir: where the site's package.json is. install: npm or pnpm. merge: auto (arm GitHub auto-merge, the site's required checks decide) or after-checks (wait for the named checks on the PR head, then merge that exact head). labels and bodyFooter carry each site's PR conventions.",
+  "sites": [
+    {
+      "name": "The Ascent",
+      "repo": "bubblesorted/the-ascent",
+      "dir": ".",
+      "install": "npm",
+      "labels": ["code"],
+      "merge": { "strategy": "auto", "method": "squash" }
+    }
+  ]
+}

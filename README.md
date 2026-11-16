@@ -125,4 +125,4 @@ npm run typecheck
 npm run build
 ```
 
-Release: bump `version`, add a CHANGELOG entry, commit, then `npm run release`. It checks, builds and packs the widget, tags `v<version>` and attaches the file to a GitHub release. Each site then installs the new release URL.
+Release: bump `version`, add a CHANGELOG entry, commit, then `npm run release`. It checks, builds and packs the widget, tags `v<version>` and attaches the file to a GitHub release. Then `npm run update-sites` opens a PR in every site listed in `sites.json` that moves it to the new release, and merges each one through that site's own checks (`-- --dry-run` to preview, `-- --only "<name>"` for one site). Add a site to `sites.json` when it starts using the widget.

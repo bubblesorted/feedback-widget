@@ -31,7 +31,8 @@
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup && cp src/styles.css dist/styles.css",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "release": "sh scripts/release.sh"
+    "release": "sh scripts/release.sh",
+    "update-sites": "node scripts/update-sites.mjs"
   },
   "dependencies": {
     "modern-screenshot": "4.7.0"
