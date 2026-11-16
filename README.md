@@ -91,6 +91,24 @@ Set any of these on `.fbw-root` or on your `className`. Nothing else should be r
 }
 ```
 
+### 4. Your own transport (optional)
+
+By default the widget sends one multipart POST to `endpoint`, up to about 24 MB. A host that caps request bodies (Vercel: 4.5 MB) can pass `submit`: upload the files somewhere first, then ask its own route to deliver them.
+
+```tsx
+import { buildManifest, FeedbackWidget, type SubmitCapture } from "@bubblesorted/feedback-widget";
+
+const staged: SubmitCapture = async (endpoint, draft) => {
+  const manifest = await buildManifest(draft); // sizes and SHA-256s, checked
+  // ...upload draft.image / draft.recording, then ask the route to finalize...
+  return { identifier, url }; // throw an Error with a message to show; the draft stays saved for Retry
+};
+
+<FeedbackWidget endpoint="/api/feedback-capture" submit={staged} destinationLabel="..." draftScope="..." />;
+```
+
+On the server, check the manifest with `checkManifest`, verify each file's bytes with `verifyAsset`, and deliver with `sendCapture` from `@bubblesorted/feedback-widget/server`. Give it a journal that remembers uploaded file URLs by `assetFileName`, so a retry does not upload twice; the capture id keeps the Linear issue idempotent.
+
 ## Privacy
 
 - The target's text is its `aria-label` or visible text, cut to 160 characters. Input values and page HTML are never read.
