@@ -31,6 +31,11 @@ export interface LinearDestination {
   teamId: string;
   /** The workflow state new issues take. It must belong to the team. */
   stateId: string;
+  /**
+   * Optional: the type the state must have ("triage", "backlog", "unstarted", ...), checked before every send, so a
+   * renamed or reused state id cannot quietly file issues somewhere else.
+   */
+  stateType?: string;
   /** Optional project; it must belong to the team. */
   projectId?: string;
   /** Optional labels (team or workspace labels). */

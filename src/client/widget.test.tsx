@@ -116,6 +116,32 @@ describe("opening", () => {
   });
 });
 
+describe("focus", () => {
+  it("an open request while the panel is already open moves focus back into it (a menu or palette closing took it)", async () => {
+    render(
+      <>
+        <button type="button" data-testid="host-menu">
+          Menu
+        </button>
+        <FeedbackWidget endpoint="/api/feedback" destinationLabel="X" draftScope="s" launcher="none" />
+      </>,
+    );
+    act(() => {
+      openFeedback();
+    });
+    const panel = await screen.findByTestId("feedback-panel");
+    await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
+    act(() => {
+      screen.getByTestId("host-menu").focus();
+    });
+    expect(panel.contains(document.activeElement)).toBe(false);
+    act(() => {
+      openFeedback();
+    });
+    await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
+  });
+});
+
 describe("the picker", () => {
   it("keeps every key from the page while it is up; a key's own default still runs", () => {
     const page = vi.fn();
@@ -186,6 +212,13 @@ describe("sending", () => {
     expect(transport.mock.calls[0]![0]).toBe("/api/feedback-capture");
     expect(transport.mock.calls[0]![1].sealed).toBe(true);
     expect(vi.mocked(submitCapture)).not.toHaveBeenCalled();
+    // Sent: the stored draft is a fresh one, so a reload does not restore the sent capture with Retry.
+    await waitFor(() => {
+      const last = store.writes.at(-1) as CaptureDraft;
+      expect(last.sealed).toBe(false);
+      expect(last.metadata.note).toBe("");
+      expect(last.metadata.id).not.toBe(transport.mock.calls[0]![1].metadata.id);
+    });
   });
 
   it("a send that succeeds shows the receipt link; one that fails keeps the sealed draft and offers Retry", async () => {

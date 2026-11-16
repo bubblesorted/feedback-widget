@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- A sent capture no longer comes back after a reload: the stored draft becomes a fresh one as soon as the receipt arrives.
+- Every `openFeedback()` moves focus into the panel, even when it is already open, and again on the next frame, so a menu or command palette that hands focus back to its trigger as it closes does not keep it.
+- A panel that fails to download (offline, or a deploy removed the old file) shows "Feedback could not load" with Try again and Close, instead of throwing into the host page's error boundary.
+- `destination.stateType` (optional): the type the destination state must have, e.g. "triage", checked before every send.
+
 ## 0.2.0
 
 - `submit` prop on `<FeedbackWidget>`: a site's own transport replaces the default multipart POST, for hosts that cap request bodies (Vercel: 4.5 MB). `buildManifest` and `submitCapture` are exported for it.

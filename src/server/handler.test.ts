@@ -49,6 +49,7 @@ function stubLinear() {
     createLosesAnswer?: boolean;
     createFailsOnce?: boolean;
     stateTeam?: string;
+    stateType?: string;
     projectTeam?: string;
   } = {};
   let n = 0;
@@ -75,7 +76,7 @@ function stubLinear() {
       case "Destination":
         return json({
           data: {
-            workflowState: { team: { id: plan.stateTeam ?? DESTINATION.teamId } },
+            workflowState: { type: plan.stateType ?? "triage", team: { id: plan.stateTeam ?? DESTINATION.teamId } },
             ...("project" in variables ? { project: { teams: { nodes: [{ id: plan.projectTeam ?? DESTINATION.teamId }] } } } : {}),
           },
         });
@@ -400,6 +401,17 @@ describe("delivery: one capture, one issue", () => {
     expect((await withProject(await capture(manifestFor(), { image: PNG }))).status).toBe(502);
     expect(linear.ops()).not.toContain("UploadCapture");
     expect(linear.ops()).not.toContain("CreateCapture");
+  });
+
+  it("a destination that names its state type refuses a state of another type, and sends to the right one", async () => {
+    const triageOnly = createFeedbackHandler(() => ({ ...config(), destination: { ...DESTINATION, stateType: "triage" } }));
+    linear.plan.stateType = "backlog";
+    const wrong = await triageOnly(await capture(manifestFor(), { image: PNG }));
+    expect(wrong.status).toBe(502);
+    expect((await errorOf(wrong)).message).toMatch(/is not a triage state/);
+    expect(linear.ops()).not.toContain("CreateCapture");
+    linear.plan.stateType = "triage";
+    expect((await triageOnly(await capture(manifestFor(), { image: PNG }))).status).toBe(200);
   });
 
   it("a retry of a sent capture answers the same receipt without asking Linear again", async () => {

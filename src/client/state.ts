@@ -7,6 +7,8 @@ import { useSyncExternalStore } from "react";
 
 let mounted = 0;
 let open = false;
+// Counts open requests, so a request while already open (from a menu or palette) still moves focus into the panel.
+let requests = 0;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -30,10 +32,9 @@ export function registerWidget(): () => void {
 /** Opens the panel. Returns false when no widget is mounted on this page (feedback is not available here). */
 export function openFeedback(): boolean {
   if (!mounted) return false;
-  if (!open) {
-    open = true;
-    emit();
-  }
+  open = true;
+  requests++;
+  emit();
   return true;
 }
 
@@ -59,6 +60,11 @@ export function useFeedbackOpen(): boolean {
   return useSyncExternalStore(subscribe, () => open, () => false);
 }
 
+/** Increments on every openFeedback(), for the panel to take focus again. */
+export function useFeedbackOpenRequest(): number {
+  return useSyncExternalStore(subscribe, () => requests, () => 0);
+}
+
 /** Whether a widget is mounted, for a host that shows its own entry point. */
 export function useFeedbackAvailable(): boolean {
   return useSyncExternalStore(subscribe, () => mounted > 0, () => false);
@@ -68,5 +74,6 @@ export function useFeedbackAvailable(): boolean {
 export function resetFeedbackState(): void {
   open = false;
   mounted = 0;
+  requests = 0;
   emit();
 }

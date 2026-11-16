@@ -12,7 +12,7 @@ import { openDraftSession } from "./draft-session";
 import { readDraft, writeDraft } from "./draft-store";
 import { CAPTURE_UI, describeTarget } from "./picker";
 import { canCropToElement, canRecord, startRecording, type Recording } from "./recording";
-import { closeFeedback, useFeedbackOpen } from "./state";
+import { closeFeedback, useFeedbackOpen, useFeedbackOpenRequest } from "./state";
 import { submitCapture, type SubmitCapture } from "./submit";
 import { TargetPicker } from "./target-picker";
 import { Button, Icon } from "./ui";
@@ -87,6 +87,7 @@ function useBlobUrl(blob: Blob | undefined): string | undefined {
 
 export function FeedbackPanel({ endpoint, submit: transport = submitCapture, draftScope, destinationLabel, title, shortcutLabel, onSent, onBusyOverlay }: PanelProps) {
   const open = useFeedbackOpen();
+  const openRequest = useFeedbackOpenRequest();
   const [draft, setDraft] = useState<CaptureDraft>();
   const [picking, setPicking] = useState(false);
   const [busy, setBusy] = useState("");
@@ -150,13 +151,22 @@ export function FeedbackPanel({ endpoint, submit: transport = submitCapture, dra
       const active = document.activeElement;
       returnFocus.current = active instanceof HTMLElement && !active.closest(CAPTURE_UI) ? active : null;
     }
-    if (shown) panel.current?.focus({ preventScroll: true });
     if (!open && returnFocus.current) {
       const back = returnFocus.current;
       returnFocus.current = null;
       if (back.isConnected) back.focus({ preventScroll: true });
     }
-  }, [open, shown]);
+    if (!shown) return;
+    const focus = () => {
+      const node = panel.current;
+      if (node && !node.contains(document.activeElement)) node.focus({ preventScroll: true });
+    };
+    focus();
+    // A menu or palette that opened the panel often hands focus back to its own trigger as it closes, after this
+    // runs. Take it again on the next frame.
+    const frame = requestAnimationFrame(focus);
+    return () => cancelAnimationFrame(frame);
+  }, [open, shown, openRequest]);
 
   // Esc closes the panel (the picker's own capture-phase listener takes Esc first while it is up).
   useEffect(() => {
@@ -288,6 +298,9 @@ export function FeedbackPanel({ endpoint, submit: transport = submitCapture, dra
       await writeDraft(draftKey.current, sealed);
       const r = await transport(endpoint, sealed);
       setReceipt(r);
+      // Sent: the stored draft becomes a fresh one, so a reload does not bring the sent capture back with Retry.
+      target.current = null;
+      setDraft(freshDraft());
       onSent?.(r);
     } catch (cause) {
       setError(message(cause));

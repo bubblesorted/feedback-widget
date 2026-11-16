@@ -32,7 +32,7 @@ import { createFeedbackHandler } from "@bubblesorted/feedback-widget/server";
 export const POST = createFeedbackHandler(() => ({
   product: "The Ascent", // title prefix: "[The Ascent] ..."
   linearApiKey: process.env.LINEAR_API_KEY,
-  destination: { name: "ASC Backlog", teamId: "...", stateId: "...", labelIds: ["..."] /* projectId optional */ },
+  destination: { name: "ASC Backlog", teamId: "...", stateId: "...", labelIds: ["..."] /* projectId and stateType ("triage", "backlog"...) optional */ },
   authorize: async (request) => {
     const user = await currentUser(request);
     if (!user) return { ok: false, status: 401 };

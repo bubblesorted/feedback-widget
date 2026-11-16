@@ -162,7 +162,7 @@ async function existing(access: LinearAccess, id: string, marker: string): Promi
 /** The state (and the project, when there is one) must belong to the team; otherwise nothing is created. */
 async function validateDestination(access: LinearAccess, destination: LinearDestination): Promise<void> {
   type Result = {
-    workflowState: { team: { id: string } } | null;
+    workflowState: { type?: string; team: { id: string } } | null;
     project?: { teams: { nodes: Array<{ id: string }> } } | null;
   };
   let result: Result;
@@ -170,10 +170,10 @@ async function validateDestination(access: LinearAccess, destination: LinearDest
     result = destination.projectId
       ? await query<Result>(
           access,
-          "query Destination($state: String!, $project: String!) { workflowState(id: $state) { team { id } } project(id: $project) { teams { nodes { id } } } }",
+          "query Destination($state: String!, $project: String!) { workflowState(id: $state) { type team { id } } project(id: $project) { teams { nodes { id } } } }",
           { state: destination.stateId, project: destination.projectId },
         )
-      : await query<Result>(access, "query Destination($state: String!) { workflowState(id: $state) { team { id } } }", {
+      : await query<Result>(access, "query Destination($state: String!) { workflowState(id: $state) { type team { id } } }", {
           state: destination.stateId,
         });
   } catch (e) {
@@ -186,6 +186,9 @@ async function validateDestination(access: LinearAccess, destination: LinearDest
   const projectOk = !destination.projectId || (result.project?.teams?.nodes ?? []).some((t) => t.id === destination.teamId);
   if (!stateOk || !projectOk) {
     throw new FeedbackError("upstream_failed", `The ${destination.name} destination does not belong to its team, so nothing was sent.`);
+  }
+  if (destination.stateType && result.workflowState?.type !== destination.stateType) {
+    throw new FeedbackError("upstream_failed", `The ${destination.name} state is not a ${destination.stateType} state, so nothing was sent.`);
   }
 }
 

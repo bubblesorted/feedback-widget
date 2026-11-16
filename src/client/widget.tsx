@@ -4,14 +4,51 @@
  * load carries only the launcher.
  */
 
-import { lazy, Suspense, useCallback, useEffect, useState, type CSSProperties } from "react";
+import { Component, lazy, Suspense, useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { CaptureReceipt } from "../contract";
 import type { SubmitCapture } from "./submit";
-import { registerWidget, toggleFeedback, useFeedbackOpen } from "./state";
-import { Icon } from "./ui";
+import { closeFeedback, registerWidget, toggleFeedback, useFeedbackOpen } from "./state";
+import { Button, Icon } from "./ui";
 
-const LazyPanel = lazy(() => import("./panel").then((m) => ({ default: m.FeedbackPanel })));
+// A fresh lazy component per attempt: React caches a failed import, so Try again needs a new one.
+const loadPanel = () => lazy(() => import("./panel").then((m) => ({ default: m.FeedbackPanel })));
+
+/**
+ * Keeps a failed panel download (offline, a deploy that removed the old chunk) inside the widget: a short message
+ * with Try again, never an error that reaches the host page's error boundary.
+ */
+class PanelBoundary extends Component<{ open: boolean; onRetry: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    if (!this.props.open) return null;
+    return (
+      <section className="fbw-panel fbw-load-failed" role="alert" data-testid="feedback-load-failed">
+        <p>Feedback could not load. Check your connection, then try again.</p>
+        <div className="fbw-row">
+          <Button
+            size="sm"
+            variant="primary"
+            data-testid="feedback-load-retry"
+            onClick={() => {
+              this.setState({ failed: false });
+              this.props.onRetry();
+            }}
+          >
+            Try again
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => closeFeedback()}>
+            Close
+          </Button>
+        </div>
+      </section>
+    );
+  }
+}
 
 export interface FeedbackWidgetProps {
   /** The site's feedback route, e.g. "/api/feedback". */
@@ -65,6 +102,7 @@ export function FeedbackWidget({
   const [loaded, setLoaded] = useState(false);
   const [overlay, setOverlay] = useState(false);
   const [shortcutLabel, setShortcutLabel] = useState<string | null>(null);
+  const [Panel, setPanel] = useState(loadPanel);
 
   useEffect(() => registerWidget(), []);
 
@@ -106,18 +144,20 @@ export function FeedbackWidget({
         </button>
       ) : null}
       {loaded ? (
-        <Suspense fallback={null}>
-          <LazyPanel
-            endpoint={endpoint}
-            submit={submit}
-            draftScope={draftScope}
-            destinationLabel={destinationLabel}
-            title={title}
-            shortcutLabel={shortcutLabel}
-            onSent={onSent}
-            onBusyOverlay={onBusyOverlay}
-          />
-        </Suspense>
+        <PanelBoundary open={open} onRetry={() => setPanel(loadPanel)}>
+          <Suspense fallback={null}>
+            <Panel
+              endpoint={endpoint}
+              submit={submit}
+              draftScope={draftScope}
+              destinationLabel={destinationLabel}
+              title={title}
+              shortcutLabel={shortcutLabel}
+              onSent={onSent}
+              onBusyOverlay={onBusyOverlay}
+            />
+          </Suspense>
+        </PanelBoundary>
       ) : null}
     </div>
   );
