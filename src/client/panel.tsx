@@ -224,6 +224,9 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
         // button came out white). Only an element with no background of its own gets the page's.
         backgroundColor: transparent(getComputedStyle(element).backgroundColor) ? pageBackground() : null,
         filter: (node) => !(node instanceof Element && node.matches(CAPTURE_UI)),
+        // modern-screenshot strips the captured element's own margin so it sits at the image's origin, and the browser's
+        // default margin then comes back: a picked h1 or h2 drew its text half a line low with the bottom cut off.
+        style: { margin: "0" },
         type: "image/png",
       });
       if (!image?.size) throw new Error("The image could not be captured. Try recording the element instead.");

@@ -63,6 +63,9 @@ it("picking an element captures its image without a Capture image click", async 
   await waitFor(() => expect(screen.getByTestId("feedback-image")).toBeTruthy());
   expect(shot.domToBlob).toHaveBeenCalledOnce();
   expect(shot.domToBlob.mock.calls[0]![0]).toBe(document.getElementById("chosen"));
+  // The renderer strips the picked element's margin; without margin 0 the browser's default heading margin pushes the
+  // text out of the frame (ASC-740).
+  expect(shot.domToBlob.mock.calls[0]![1]).toMatchObject({ style: { margin: "0" } });
 });
 
 it("a failed automatic capture says so and leaves the pick in place", async () => {

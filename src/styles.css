@@ -200,6 +200,12 @@
   max-height: 180px;
   object-fit: contain;
 }
+/* A small element's image keeps its own size rather than being blown up, blurred, to the panel's width. */
+.fbw-evidence img {
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
+}
 .fbw-evidence figcaption {
   display: flex;
   align-items: center;
