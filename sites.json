@@ -1,13 +1,29 @@
 {
-  "$comment": "Every site that uses the widget. `npm run update-sites` opens one PR per site that moves it to this package's current release. dir: where the site's package.json is. install: npm or pnpm. merge: auto (arm GitHub auto-merge, the site's required checks decide) or after-checks (wait for the named checks on the PR head, then merge that exact head). labels and bodyFooter carry each site's PR conventions.",
+  "$comment": "Every site that uses the widget. `npm run update-sites` opens one PR per site that moves it to this package's current release. dir: where the site's package.json is. install: npm or pnpm. merge: auto (arm GitHub auto-merge, the site's required checks decide), after-checks (wait for the named checks on the PR head, then merge that exact head) or manual (the site's rules need a step the script cannot do; the note says which). labels and bodyFooter carry each site's PR conventions.",
   "sites": [
     {
       "name": "The Ascent",
       "repo": "bubblesorted/the-ascent",
       "dir": ".",
       "install": "npm",
-      "labels": ["code"],
-      "merge": { "strategy": "auto", "method": "squash" }
+      "labels": [
+        "code"
+      ],
+      "merge": {
+        "strategy": "auto",
+        "method": "squash"
+      }
+    },
+    {
+      "name": "Nudge",
+      "repo": "bubblesorted/nudge-monorepo",
+      "dir": "apps/api",
+      "install": "pnpm",
+      "merge": {
+        "strategy": "manual",
+        "method": "merge",
+        "note": "Nudge needs a cross-model review on every runtime change, a version bump included: run its cross-model-review skill on the PR, add the Author-Model-Family / Author-Model / Reviewed-By-Model-Family trailers to the body, wait for pairing-check and Safety net on the head, then gh pr merge --merge --match-head-commit <sha> (nudge-monorepo CLAUDE.md, Merge gate)."
+      }
     }
   ]
 }

@@ -97,7 +97,7 @@ for (const site of sites) {
       waiting.push({ site, pr, method });
       results.push([site.name, `${pr} (waiting for ${site.merge.checks.join(", ")})`]);
     } else {
-      results.push([site.name, `${pr} (merge it through the site's own process)`]);
+      results.push([site.name, `${pr} (not merged: ${site.merge?.note ?? "merge it through the site's own process"})`]);
     }
   } catch (error) {
     results.push([site.name, `FAILED: ${(error.stderr || error.message || String(error)).toString().trim().split("\n").slice(-3).join(" ")}`]);
