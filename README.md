@@ -125,4 +125,14 @@ npm run typecheck
 npm run build
 ```
 
-Release: bump `version`, add a CHANGELOG entry, commit, then `npm run release`. It checks, builds and packs the widget, tags `v<version>` and attaches the file to a GitHub release. Then `npm run update-sites` opens a PR in every site listed in `sites.json` that moves it to the new release, and merges each one through that site's own checks (`-- --dry-run` to preview, `-- --only "<name>"` for one site). Add a site to `sites.json` when it starts using the widget.
+Release: bump `version`, add a CHANGELOG entry, commit, then `npm run release`. It checks, builds and packs the widget, tags `v<version>` and attaches the file to a GitHub release. Then `npm run update-sites` opens a PR in every site listed in `sites.json` that moves it to the new release (`-- --dry-run` to preview, `-- --only "<name>"` for one site). Each PR merges only through that site's own gate; add a site to `sites.json` when it starts using the widget.
+
+## Sites
+
+| Site | Repo | Update PR |
+|---|---|---|
+| The Ascent | bubblesorted/the-ascent | Auto-merge armed; lands when CI and automated review pass |
+| Nudge | bubblesorted/nudge-monorepo (`apps/api`) | Needs a Codex cross-model review, the PR trailers and Nudge's merge gate. Uses its own staged upload through `submit` (Vercel's 4.5 MB body cap) |
+| Aria OS | bubblesorted/aria-os | Needs one Codex review and the `aria-os verify` job; a merge does not deploy, so relaunch with `/Users/pnm/bin/aria-os` |
+
+After an update, test each site with one real send and cancel the test issue (Canceled, never Done). Only Philip can send on The Ascent (Owner) and Nudge (reports login); an agent can test Aria OS on `localhost:3000`.
