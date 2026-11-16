@@ -96,6 +96,7 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
   const [scope, setScope] = useState<RecordingScope>(() => (canCropToElement() ? "element" : "shared-surface"));
   const [narration, setNarration] = useState(false);
   const [recordable] = useState(canRecord);
+  const [captureNext, setCaptureNext] = useState(false);
   const target = useRef<Element | null>(null);
   const activeRecording = useRef<Recording | undefined>(undefined);
   const lifecycle = useRef(0);
@@ -188,8 +189,18 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
     );
     setPicking(false);
     setError("");
+    // The image is taken as soon as an element is picked: a separate Capture image click was easy to miss, and
+    // captures went to Linear with no picture. The image can still be removed, or taken again, before sending.
+    setCaptureNext(true);
   }, []);
   const cancelPicker = useCallback(() => setPicking(false), []);
+
+  // Runs after the pick has rendered, so the picker's overlay is gone and the draft names the new target.
+  useEffect(() => {
+    if (!captureNext || !draft || busy) return;
+    setCaptureNext(false);
+    void captureImage();
+  });
 
   async function captureImage() {
     const element = target.current;

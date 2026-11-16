@@ -7,7 +7,7 @@ One widget, used by every site. A site supplies configuration only: who may send
 ## What it does
 
 - **Pick an element.** The outline follows the pointer. Click to hold, P and C for parent and child, Enter or "Use element" to take it. No other key reaches the page while the picker is up.
-- **Capture an image** of the element (a DOM render: canvas, cross-origin content and native controls may draw differently).
+- **An image of the element is taken as soon as it is picked**, with Remove and Capture image to drop or retake it (a DOM render: canvas, cross-origin content and native controls may draw differently).
 - **Record** the selected element (Chrome region capture, current tab) or a shared tab or window, with optional microphone narration. Stops at 45 seconds or 12 MB.
 - **Preview, write, send.** Drafts live in the browser (IndexedDB), one per tab and per `draftScope`, for 24 hours, and survive navigation. A failed send keeps the sealed draft; Retry sends the same capture.
 - **Idempotent.** The capture's UUID is the Linear issue id, so a retry, even after a lost response or a server restart, returns the same issue.
