@@ -170,6 +170,24 @@ describe("the page a capture names", () => {
 });
 
 describe("sending", () => {
+  it("a site's own transport (the submit prop) sends the sealed draft instead of the default multipart POST", async () => {
+    store.saved = savedDraft({ note: "Staged upload" });
+    const transport = vi.fn().mockResolvedValue({ identifier: "NUD-7", url: "https://example.test/NUD-7" });
+    render(<FeedbackWidget endpoint="/api/feedback-capture" destinationLabel="X" draftScope="s" submit={transport} />);
+    act(() => {
+      openFeedback();
+    });
+    await waitFor(() => expect((screen.getByTestId("feedback-note") as HTMLTextAreaElement).value).toBe("Staged upload"));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("feedback-send"));
+    });
+    expect((await screen.findByTestId("feedback-receipt-link")).textContent).toBe("NUD-7");
+    expect(transport).toHaveBeenCalledOnce();
+    expect(transport.mock.calls[0]![0]).toBe("/api/feedback-capture");
+    expect(transport.mock.calls[0]![1].sealed).toBe(true);
+    expect(vi.mocked(submitCapture)).not.toHaveBeenCalled();
+  });
+
   it("a send that succeeds shows the receipt link; one that fails keeps the sealed draft and offers Retry", async () => {
     store.saved = savedDraft({ note: "Make Continue clearer" });
     const onSent = vi.fn();

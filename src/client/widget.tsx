@@ -7,6 +7,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type CSSProperties } from "react";
 
 import type { CaptureReceipt } from "../contract";
+import type { SubmitCapture } from "./submit";
 import { registerWidget, toggleFeedback, useFeedbackOpen } from "./state";
 import { Icon } from "./ui";
 
@@ -30,6 +31,13 @@ export interface FeedbackWidgetProps {
   title?: string;
   /** Called with the receipt after a successful send, e.g. for the site's own toast. */
   onSent?: (receipt: CaptureReceipt) => void;
+  /**
+   * How a sealed draft reaches the server. Default: one multipart POST to `endpoint` (createFeedbackHandler). A site
+   * whose host caps request bodies (Vercel: 4.5 MB) passes its own, e.g. upload the files to storage, then ask its
+   * route to deliver them with sendCapture from "@bubblesorted/feedback-widget/server". Build the manifest with
+   * buildManifest, and throw an Error whose message the panel can show; the draft stays saved for Retry.
+   */
+  submit?: SubmitCapture;
   /** Extra class on the root, for theming through the --fbw-* variables. */
   className?: string;
   style?: CSSProperties;
@@ -49,6 +57,7 @@ export function FeedbackWidget({
   shortcut = true,
   title = "Send feedback",
   onSent,
+  submit,
   className,
   style,
 }: FeedbackWidgetProps) {
@@ -100,6 +109,7 @@ export function FeedbackWidget({
         <Suspense fallback={null}>
           <LazyPanel
             endpoint={endpoint}
+            submit={submit}
             draftScope={draftScope}
             destinationLabel={destinationLabel}
             title={title}

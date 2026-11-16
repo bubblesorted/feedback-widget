@@ -13,12 +13,13 @@ import { readDraft, writeDraft } from "./draft-store";
 import { CAPTURE_UI, describeTarget } from "./picker";
 import { canCropToElement, canRecord, startRecording, type Recording } from "./recording";
 import { closeFeedback, useFeedbackOpen } from "./state";
-import { submitCapture } from "./submit";
+import { submitCapture, type SubmitCapture } from "./submit";
 import { TargetPicker } from "./target-picker";
 import { Button, Icon } from "./ui";
 
 export interface PanelProps {
   endpoint: string;
+  submit?: SubmitCapture;
   draftScope: string;
   destinationLabel: string;
   title: string;
@@ -84,7 +85,7 @@ function useBlobUrl(blob: Blob | undefined): string | undefined {
   return entry && entry.blob === blob ? entry.url : undefined;
 }
 
-export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, shortcutLabel, onSent, onBusyOverlay }: PanelProps) {
+export function FeedbackPanel({ endpoint, submit: transport = submitCapture, draftScope, destinationLabel, title, shortcutLabel, onSent, onBusyOverlay }: PanelProps) {
   const open = useFeedbackOpen();
   const [draft, setDraft] = useState<CaptureDraft>();
   const [picking, setPicking] = useState(false);
@@ -285,7 +286,7 @@ export function FeedbackPanel({ endpoint, draftScope, destinationLabel, title, s
     setDraft(sealed);
     try {
       await writeDraft(draftKey.current, sealed);
-      const r = await submitCapture(endpoint, sealed);
+      const r = await transport(endpoint, sealed);
       setReceipt(r);
       onSent?.(r);
     } catch (cause) {

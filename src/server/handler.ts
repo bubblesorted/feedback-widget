@@ -75,7 +75,8 @@ export function sameOrigin(request: Request, allowed: string[] = []): boolean {
   }
 }
 
-function fileName(asset: ManifestAsset): string {
+/** The file name a capture's asset is uploaded to Linear under. */
+export function assetFileName(asset: ManifestAsset): string {
   return asset.kind === "image" ? "element.png" : `recording.${asset.type === "video/mp4" ? "mp4" : "webm"}`;
 }
 
@@ -131,7 +132,7 @@ export function createFeedbackHandler(
       for (const asset of manifest.assets) {
         const bytes = files[asset.kind];
         verifyAsset(asset, bytes);
-        assets.push({ name: fileName(asset), type: asset.type, bytes });
+        assets.push({ name: assetFileName(asset), type: asset.type, bytes });
       }
       const entry: JournalEntry = prior ?? { at: Date.now(), assets: {}, manifestHash: hash };
       journal.set(id, entry);
