@@ -24,6 +24,17 @@
         "method": "merge",
         "note": "Nudge needs a cross-model review on every runtime change, a version bump included: run its cross-model-review skill on the PR, add the Author-Model-Family / Author-Model / Reviewed-By-Model-Family trailers to the body, wait for pairing-check and Safety net on the head, then gh pr merge --merge --match-head-commit <sha> (nudge-monorepo CLAUDE.md, Merge gate)."
       }
+    },
+    {
+      "name": "Aria OS",
+      "repo": "bubblesorted/aria-os",
+      "dir": ".",
+      "install": "pnpm",
+      "merge": {
+        "strategy": "manual",
+        "method": "squash",
+        "note": "Aria OS merges when its aria-os verify job is green after one cross-model review, and a merge does not deploy: relaunch the installed app with /Users/pnm/bin/aria-os and check its health (aria-os README and PLAN Run rules)."
+      }
     }
   ]
 }
