@@ -38,3 +38,17 @@ it("white when nothing has a background", () => {
   document.body.innerHTML = '<h1 id="t">A</h1>';
   expect(backgroundBehind(document.getElementById("t")!)).toBe("#ffffff");
 });
+
+it("skips display: contents ancestors, which paint no background", () => {
+  document.body.style.backgroundColor = "rgb(10, 10, 10)";
+  document.body.innerHTML = '<div style="display: contents; background-color: rgb(250, 0, 0)"><h1 id="t">A</h1></div>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(10, 10, 10)");
+});
+
+it("follows a slotted element through its slot", () => {
+  document.body.style.backgroundColor = "rgb(10, 10, 10)";
+  document.body.innerHTML = '<div id="host"><h2 id="t" slot="s">A</h2></div>';
+  const root = document.getElementById("host")!.attachShadow({ mode: "open" });
+  root.innerHTML = '<div style="background-color: rgb(200, 200, 200)"><slot name="s"></slot></div>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(200, 200, 200)");
+});

@@ -54,35 +54,49 @@ export function transparent(color: string): boolean {
   return !color || color === "transparent" || /^rgba\([^)]*,\s*0\)$/.test(color.replace(/\s+/g, " ").trim());
 }
 
+/** The element's parent in the flat tree: its slot when slotted, else its parent, else its shadow root's host. */
 const parentOf = (el: Element): Element | null =>
-  el.parentElement ?? (typeof ShadowRoot !== "undefined" && el.parentNode instanceof ShadowRoot ? el.parentNode.host : null);
+  el.assignedSlot ?? el.parentElement ?? (typeof ShadowRoot !== "undefined" && el.parentNode instanceof ShadowRoot ? el.parentNode.host : null);
 
+/** Any CSS colour as [r, g, b, alpha]: rgb()/rgba() directly, anything else through a 1-pixel canvas; null if neither. */
 function rgba(color: string): [number, number, number, number] | null {
   const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/.exec(color.trim());
-  if (!m) return null;
-  const alpha = m[4] === undefined ? 1 : Number(m[4]) / (m[5] ? 100 : 1);
-  return [Number(m[1]), Number(m[2]), Number(m[3]), Math.min(1, alpha)];
+  if (m) return [Number(m[1]), Number(m[2]), Number(m[3]), Math.min(1, m[4] === undefined ? 1 : Number(m[4]) / (m[5] ? 100 : 1))];
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+    return [r!, g!, b!, a! / 255];
+  } catch {
+    return null;
+  }
 }
 
 /**
- * The background behind an element, as it shows on screen: its ancestors' backgrounds (through shadow-root hosts) up
- * to the first opaque one, translucent ones composited over it, then white. The page's own background is not enough: a
- * heading on a pale section of a dark page came out dark text on the dark page colour. A colour this cannot read (a
- * modern colour space) counts as opaque.
+ * The background behind an element, as it shows on screen: its ancestors' backgrounds in the flat tree (slots and
+ * shadow-root hosts included, display: contents skipped since it paints none) up to the first opaque one, translucent
+ * ones composited over it, then white. The page's own background is not enough: a heading on a pale section of a dark
+ * page came out dark text on the dark page colour. A colour that cannot be read counts as white behind the layers.
  */
 export function backgroundBehind(element: Element): string {
   const layers: Array<[number, number, number, number]> = [];
   let base: [number, number, number] = [255, 255, 255];
   for (let el = parentOf(element); el; el = parentOf(el)) {
-    const bg = getComputedStyle(el).backgroundColor;
+    const style = getComputedStyle(el);
+    if (style.display === "contents") continue;
+    const bg = style.backgroundColor;
     if (transparent(bg)) continue;
     const c = rgba(bg);
     if (c && c[3] < 1) {
       layers.push(c);
       continue;
     }
-    if (!c || !layers.length) return bg;
-    base = [c[0], c[1], c[2]];
+    if (!layers.length) return bg;
+    if (c) base = [c[0], c[1], c[2]];
     break;
   }
   if (!layers.length) return "#ffffff";
