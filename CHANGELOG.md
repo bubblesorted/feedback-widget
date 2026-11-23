@@ -2,7 +2,7 @@
 
 ## 0.3.1
 
-- A picked element with no background of its own is drawn on the background behind it (its nearest opaque ancestor's), not the page's: on a dark page, a heading on a pale section came out dark on dark and could not be read.
+- A picked element with no background of its own is drawn on the background behind it, not the page's: on a dark page, a heading on a pale section came out dark on dark and could not be read. The background is the ancestors' (through slots and shadow-root hosts, skipping `display: contents` and any ancestor whose box does not cover the element) up to the first opaque one, with translucent ones composited over it.
 - The widget's buttons, selects and checkbox keep their own size on a page that styles bare elements (`button { min-height: 48px }`, `input { width: 100%; min-height: 54px }`): the launcher grew and the narration checkbox became a large box.
 - `sites.json` takes an optional `branch` for a site whose live line is not `main`; `npm run update-sites` clones that branch and bases the PR on it. Amy Thake (amythake.com) joins on `amy-nov17-updates`.
 

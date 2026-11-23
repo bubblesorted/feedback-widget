@@ -79,15 +79,27 @@ function rgba(color: string): [number, number, number, number] | null {
 /**
  * The background behind an element, as it shows on screen: its ancestors' backgrounds in the flat tree (slots and
  * shadow-root hosts included, display: contents skipped since it paints none) up to the first opaque one, translucent
- * ones composited over it, then white. The page's own background is not enough: a heading on a pale section of a dark
+ * ones composited over it, then white. An ancestor whose box does not cover the element's centre is skipped. The
+ * page's own background is not enough: a heading on a pale section of a dark
  * page came out dark text on the dark page colour. A colour that cannot be read counts as white behind the layers.
  */
 export function backgroundBehind(element: Element): string {
   const layers: Array<[number, number, number, number]> = [];
   let base: [number, number, number] = [255, 255, 255];
+  // An ancestor paints behind the element only where its box is: a fixed or absolutely positioned element can sit
+  // outside it. body and html paint the whole canvas. (No layout, as in a test DOM: every ancestor counts.)
+  const box = element.getBoundingClientRect();
+  const x = box.left + box.width / 2;
+  const y = box.top + box.height / 2;
+  const laidOut = box.width > 0 || box.height > 0;
+  const behind = (el: Element) => {
+    if (!laidOut || el === document.body || el === document.documentElement) return true;
+    const r = el.getBoundingClientRect();
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  };
   for (let el = parentOf(element); el; el = parentOf(el)) {
     const style = getComputedStyle(el);
-    if (style.display === "contents") continue;
+    if (style.display === "contents" || !behind(el)) continue;
     const bg = style.backgroundColor;
     if (transparent(bg)) continue;
     const c = rgba(bg);

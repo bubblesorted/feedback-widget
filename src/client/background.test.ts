@@ -52,3 +52,15 @@ it("follows a slotted element through its slot", () => {
   root.innerHTML = '<div style="background-color: rgb(200, 200, 200)"><slot name="s"></slot></div>';
   expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(200, 200, 200)");
 });
+
+it("skips an ancestor whose box does not cover the element (a fixed element outside its header)", () => {
+  document.body.style.backgroundColor = "rgb(10, 10, 10)";
+  document.body.innerHTML = '<header id="h" style="background-color: rgb(255, 255, 255)"><p id="t">A</p></header>';
+  const rect = (left: number, top: number, width: number, height: number) =>
+    ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }) as DOMRect;
+  document.getElementById("h")!.getBoundingClientRect = () => rect(0, 0, 800, 80);
+  document.getElementById("t")!.getBoundingClientRect = () => rect(0, 700, 200, 40);
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(10, 10, 10)");
+  document.getElementById("t")!.getBoundingClientRect = () => rect(0, 20, 200, 40);
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(255, 255, 255)");
+});
