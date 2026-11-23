@@ -34,13 +34,15 @@ beforeEach(() => {
   shot.domToBlob.mockReset();
   URL.createObjectURL = vi.fn(() => "blob:preview");
   URL.revokeObjectURL = vi.fn();
-  document.body.insertAdjacentHTML("beforeend", '<h2 id="chosen">Author</h2>');
+  document.body.insertAdjacentHTML("beforeend", '<section id="band" style="background-color: rgb(233, 233, 223)"><h2 id="chosen">Author</h2></section>');
+  document.body.style.backgroundColor = "rgb(71, 84, 59)";
 });
 
 afterEach(() => {
   cleanup();
   resetFeedbackState();
-  document.getElementById("chosen")?.remove();
+  document.getElementById("band")?.remove();
+  document.body.style.backgroundColor = "";
 });
 
 async function pick() {
@@ -66,6 +68,9 @@ it("picking an element captures its image without a Capture image click", async 
   // The renderer strips the picked element's margin; without margin 0 the browser's default heading margin pushes the
   // text out of the frame (ASC-740).
   expect(shot.domToBlob.mock.calls[0]![1]).toMatchObject({ style: { margin: "0" } });
+  // A heading with no background of its own is drawn on the background behind it (its section's), not the page's:
+  // dark text on a pale band of a dark page otherwise came out invisible (amythake.com, ARI-887).
+  expect(shot.domToBlob.mock.calls[0]![1]).toMatchObject({ backgroundColor: "rgb(233, 233, 223)" });
 });
 
 it("a failed automatic capture says so and leaves the pick in place", async () => {

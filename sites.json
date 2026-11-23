@@ -1,5 +1,5 @@
 {
-  "$comment": "Every site that uses the widget. `npm run update-sites` opens one PR per site that moves it to this package's current release. dir: where the site's package.json is. install: npm or pnpm. merge: auto (arm GitHub auto-merge, the site's required checks decide), after-checks (wait for the named checks on the PR head, then merge that exact head) or manual (the site's rules need a step the script cannot do; the note says which). labels and bodyFooter carry each site's PR conventions.",
+  "$comment": "Every site that uses the widget. `npm run update-sites` opens one PR per site that moves it to this package's current release. dir: where the site's package.json is. branch (optional, default main): the branch the PR is based on, for a site whose live line is not main. install: npm or pnpm. merge: auto (arm GitHub auto-merge, the site's required checks decide), after-checks (wait for the named checks on the PR head, then merge that exact head) or manual (the site's rules need a step the script cannot do; the note says which). labels and bodyFooter carry each site's PR conventions.",
   "sites": [
     {
       "name": "The Ascent",
@@ -34,6 +34,18 @@
         "strategy": "manual",
         "method": "squash",
         "note": "Aria OS merges when its aria-os verify job is green after one cross-model review, and a merge does not deploy: relaunch the installed app with /Users/pnm/bin/aria-os and check its health (aria-os README and PLAN Run rules)."
+      }
+    },
+    {
+      "name": "Amy Thake",
+      "repo": "bubblesorted/amythake",
+      "dir": ".",
+      "branch": "amy-nov17-updates",
+      "install": "npm",
+      "merge": {
+        "strategy": "manual",
+        "method": "merge",
+        "note": "amythake.com is built from the branch named here, not main (repo AGENTS.md: start from the live candidate). A bump needs the cross-model review on the PR head, then a merge; a merge does not deploy. Release review first, then production, with the booking deploy scripts in docs/cloudflare.md and docs/booking-preview.md, and check the Feedback button with one real send (Canceled, never Done). If production has moved to another branch, change branch here first."
       }
     }
   ]

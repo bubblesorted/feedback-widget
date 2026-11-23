@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1
+
+- A picked element with no background of its own is drawn on the background behind it (its nearest opaque ancestor's), not the page's: on a dark page, a heading on a pale section came out dark on dark and could not be read.
+- The widget's buttons, selects and checkbox keep their own size on a page that styles bare elements (`button { min-height: 48px }`, `input { width: 100%; min-height: 54px }`): the launcher grew and the narration checkbox became a large box.
+- `sites.json` takes an optional `branch` for a site whose live line is not `main`; `npm run update-sites` clones that branch and bases the PR on it. Amy Thake (amythake.com) joins on `amy-nov17-updates`.
+
 ## 0.3.0
 
 - A sent capture no longer comes back after a reload: the stored draft becomes a fresh one as soon as the receipt arrives.

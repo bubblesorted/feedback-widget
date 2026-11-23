@@ -27,6 +27,24 @@
   box-sizing: border-box;
 }
 
+/*
+ * Host pages often style bare elements (button { min-height: 48px }; input { width: 100%; min-height: 54px; padding }).
+ * The widget's own controls keep their size and the checkbox stays a checkbox.
+ */
+.fbw-root :is(button, select) {
+  min-height: 0;
+}
+.fbw-root input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: revert;
+  background: revert;
+  appearance: auto;
+}
+
 .fbw-root :where(.fbw-panel, .fbw-picker, .fbw-bar, .fbw-launcher) {
   font-family: var(--fbw-font);
   font-size: 14px;

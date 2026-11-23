@@ -51,7 +51,9 @@ for (const site of sites) {
   if (only && site.name !== only) continue;
   const work = mkdtempSync(join(tmpdir(), "fbw-site-"));
   try {
-    run("gh", ["repo", "clone", site.repo, work, "--", "--depth", "1", "--quiet"]);
+    // A site whose live line is not its default branch names it (amythake: the branch production is built from).
+    const base = site.branch ?? "main";
+    run("gh", ["repo", "clone", site.repo, work, "--", "--depth", "1", "--quiet", ...(site.branch ? ["--branch", site.branch] : [])]);
     const dir = join(work, site.dir ?? ".");
     const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
     const current = manifest.dependencies?.[pkg.name] ?? manifest.devDependencies?.[pkg.name];
@@ -87,7 +89,7 @@ for (const site of sites) {
       `Release: https://github.com/bubblesorted/feedback-widget/releases/tag/${tag}`,
       ...(site.bodyFooter ? ["", site.bodyFooter] : []),
     ].join("\n");
-    const pr = run("gh", ["pr", "create", "--repo", site.repo, "--base", "main", "--head", branch, "--title", `Feedback widget ${tag}`, "--body", body], work);
+    const pr = run("gh", ["pr", "create", "--repo", site.repo, "--base", base, "--head", branch, "--title", `Feedback widget ${tag}`, "--body", body], work);
     for (const label of site.labels ?? []) run("gh", ["pr", "edit", pr, "--add-label", label], work);
     const method = `--${site.merge?.method ?? "squash"}`;
     if (site.merge?.strategy === "auto") {

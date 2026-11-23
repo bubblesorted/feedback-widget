@@ -1,6 +1,6 @@
 {
   "name": "@bubblesorted/feedback-widget",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Embedded page feedback: pick an element, capture an image or a short recording, write a note, and file it as a Linear issue. One widget, configured per site.",
   "license": "MIT",
   "type": "module",

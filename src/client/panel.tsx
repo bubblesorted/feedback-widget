@@ -54,9 +54,12 @@ export function transparent(color: string): boolean {
   return !color || color === "transparent" || /^rgba\([^)]*,\s*0\)$/.test(color.replace(/\s+/g, " ").trim());
 }
 
-/** The first opaque background behind the page: body, then html, then white. */
-function pageBackground(): string {
-  for (const el of [document.body, document.documentElement]) {
+/**
+ * The first opaque background behind an element: its nearest ancestor's, up to body and html, then white. The page's
+ * own background is not enough: a heading on a pale section of a dark page came out dark text on the dark page colour.
+ */
+export function backgroundBehind(element: Element): string {
+  for (let el = element.parentElement; el; el = el.parentElement) {
     const bg = getComputedStyle(el).backgroundColor;
     if (!transparent(bg)) return bg;
   }
@@ -232,8 +235,8 @@ export function FeedbackPanel({ endpoint, submit: transport = submitCapture, dra
       const image = await domToBlob(element, {
         scale: Math.min(devicePixelRatio || 1, 2),
         // The backgroundColor option is painted onto the captured element itself, over its own background (a green
-        // button came out white). Only an element with no background of its own gets the page's.
-        backgroundColor: transparent(getComputedStyle(element).backgroundColor) ? pageBackground() : null,
+        // button came out white). Only an element with no background of its own gets the one behind it.
+        backgroundColor: transparent(getComputedStyle(element).backgroundColor) ? backgroundBehind(element) : null,
         filter: (node) => !(node instanceof Element && node.matches(CAPTURE_UI)),
         // modern-screenshot strips the captured element's own margin so it sits at the image's origin, and the browser's
         // default margin then comes back: a picked h1 or h2 drew its text half a line low with the bottom cut off.
