@@ -1,0 +1,40 @@
+// @vitest-environment jsdom
+/** The background a picked element is drawn on: the one behind it on screen (ARI-887). */
+import { afterEach, expect, it } from "vitest";
+
+import { backgroundBehind } from "./panel";
+
+afterEach(() => {
+  document.body.innerHTML = "";
+  document.body.style.backgroundColor = "";
+});
+
+it("uses the nearest opaque ancestor, not the page", () => {
+  document.body.style.backgroundColor = "rgb(71, 84, 59)";
+  document.body.innerHTML = '<section style="background-color: rgb(233, 233, 223)"><div><h1 id="t">A</h1></div></section>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(233, 233, 223)");
+});
+
+it("composites translucent backgrounds over the opaque one behind them", () => {
+  document.body.style.backgroundColor = "rgb(20, 20, 20)";
+  document.body.innerHTML = '<section style="background-color: rgba(255, 255, 255, 0.1)"><h1 id="t">A</h1></section>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(44, 44, 44)");
+});
+
+it("composites over white when nothing behind is opaque", () => {
+  document.body.innerHTML = '<section style="background-color: rgba(0, 0, 0, 0.5)"><h1 id="t">A</h1></section>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("rgb(128, 128, 128)");
+});
+
+it("continues through a shadow root's host", () => {
+  document.body.style.backgroundColor = "rgb(10, 10, 10)";
+  document.body.innerHTML = '<div id="host"></div>';
+  const root = document.getElementById("host")!.attachShadow({ mode: "open" });
+  root.innerHTML = '<h2 id="t">A</h2>';
+  expect(backgroundBehind(root.getElementById("t")!)).toBe("rgb(10, 10, 10)");
+});
+
+it("white when nothing has a background", () => {
+  document.body.innerHTML = '<h1 id="t">A</h1>';
+  expect(backgroundBehind(document.getElementById("t")!)).toBe("#ffffff");
+});

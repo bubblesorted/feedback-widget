@@ -54,16 +54,45 @@ export function transparent(color: string): boolean {
   return !color || color === "transparent" || /^rgba\([^)]*,\s*0\)$/.test(color.replace(/\s+/g, " ").trim());
 }
 
+const parentOf = (el: Element): Element | null =>
+  el.parentElement ?? (typeof ShadowRoot !== "undefined" && el.parentNode instanceof ShadowRoot ? el.parentNode.host : null);
+
+function rgba(color: string): [number, number, number, number] | null {
+  const m = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/.exec(color.trim());
+  if (!m) return null;
+  const alpha = m[4] === undefined ? 1 : Number(m[4]) / (m[5] ? 100 : 1);
+  return [Number(m[1]), Number(m[2]), Number(m[3]), Math.min(1, alpha)];
+}
+
 /**
- * The first opaque background behind an element: its nearest ancestor's, up to body and html, then white. The page's
- * own background is not enough: a heading on a pale section of a dark page came out dark text on the dark page colour.
+ * The background behind an element, as it shows on screen: its ancestors' backgrounds (through shadow-root hosts) up
+ * to the first opaque one, translucent ones composited over it, then white. The page's own background is not enough: a
+ * heading on a pale section of a dark page came out dark text on the dark page colour. A colour this cannot read (a
+ * modern colour space) counts as opaque.
  */
 export function backgroundBehind(element: Element): string {
-  for (let el = element.parentElement; el; el = el.parentElement) {
+  const layers: Array<[number, number, number, number]> = [];
+  let base: [number, number, number] = [255, 255, 255];
+  for (let el = parentOf(element); el; el = parentOf(el)) {
     const bg = getComputedStyle(el).backgroundColor;
-    if (!transparent(bg)) return bg;
+    if (transparent(bg)) continue;
+    const c = rgba(bg);
+    if (c && c[3] < 1) {
+      layers.push(c);
+      continue;
+    }
+    if (!c || !layers.length) return bg;
+    base = [c[0], c[1], c[2]];
+    break;
   }
-  return "#ffffff";
+  if (!layers.length) return "#ffffff";
+  let [r, g, b] = base;
+  for (const [lr, lg, lb, a] of layers.reverse()) {
+    r = lr * a + r * (1 - a);
+    g = lg * a + g * (1 - a);
+    b = lb * a + b * (1 - a);
+  }
+  return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 }
 
 function message(error: unknown): string {
